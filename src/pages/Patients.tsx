@@ -26,7 +26,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Modal } from '../components/Modal';
 import { Notification, NotificationType } from '../components/Notification';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -193,6 +193,20 @@ export const Patients: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [medicalProviders, setMedicalProviders] = useState<any[]>([]);
+  const [searchParams] = useSearchParams();
+  const editFromUrlHandled = useRef(false);
+
+  // Open edit modal if ?edit=<id> is in the URL (from PatientProfile "Edit Profile").
+  // Ref prevents re-firing every time patients state updates (e.g. after save).
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || patients.length === 0 || editFromUrlHandled.current) return;
+    const patient = patients.find(p => p.id === editId);
+    if (patient) {
+      editFromUrlHandled.current = true;
+      openEditModal(patient);
+    }
+  }, [searchParams, patients]);
 
   const { register, handleSubmit, reset, setValue, watch, control, formState: { errors, isSubmitting } } = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -742,7 +756,7 @@ export const Patients: React.FC = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-xs text-zinc-400 font-bold uppercase">DOB</p>
                   <p className="text-zinc-600">{new Date(patient.dob).toLocaleDateString()}</p>
@@ -904,7 +918,7 @@ export const Patients: React.FC = () => {
                   placeholder="Primary Language"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700">Height</label>
                   <input

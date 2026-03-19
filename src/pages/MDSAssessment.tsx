@@ -244,6 +244,7 @@ export const MDSAssessment: React.FC = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get('patientId') || DUMMY_PATIENT_ID;
+  const editId = searchParams.get('id');
   const [notification, setNotification] = useState<{ type: NotificationType, message: string } | null>(null);
 
   const { register, handleSubmit, setValue, watch, reset, getValues, formState: { errors, isSubmitting } } = useForm<MDSFormValues>({
@@ -306,6 +307,26 @@ export const MDSAssessment: React.FC = () => {
       fetchPatient();
     }
   }, [patientId, setValue]);
+
+  // Load saved form data if editing an existing submission (?id=)
+  useEffect(() => {
+    if (!editId) return;
+    const fetchSubmission = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('form_responses')
+          .select('*')
+          .eq('id', editId)
+          .single();
+        if (data && !error) {
+          reset(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching MDS submission:', error);
+      }
+    };
+    fetchSubmission();
+  }, [editId, reset]);
 
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
@@ -574,7 +595,7 @@ export const MDSAssessment: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase">3. Race/Ethnicity (Check all that apply)</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {['American Indian/Alaskan Native', 'Asian', 'Black or African American', 'Native Hawaiian or other Pacific Islander', 'White'].map(r => (
                     <label key={r} className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" value={r} {...register('sectionBB.race')} className="w-4 h-4 rounded border-zinc-300" />
@@ -1166,7 +1187,7 @@ export const MDSAssessment: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase">2. Receipt of Psychotropic Medication</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {['Antipsychotic', 'Anxiolytic', 'Antidepressant', 'Hypnotic'].map(m => (
                       <label key={m} className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" value={m} {...register('sectionQ.psychotropicMedication')} className="w-4 h-4 rounded border-zinc-300" />

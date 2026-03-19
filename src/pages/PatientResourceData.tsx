@@ -78,6 +78,7 @@ export const PatientResourceData: React.FC = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get('patientId') || DUMMY_PATIENT_ID;
+  const editId = searchParams.get('id');
   const [notification, setNotification] = useState<{ type: NotificationType, message: string } | null>(null);
 
   const { register, handleSubmit, setValue, getValues, watch, reset, formState: { errors, isSubmitting } } = useForm<ResourceFormValues>({
@@ -128,6 +129,26 @@ export const PatientResourceData: React.FC = () => {
       fetchPatient();
     }
   }, [patientId, setValue]);
+
+  // Load saved form data if editing an existing submission (?id=)
+  useEffect(() => {
+    if (!editId) return;
+    const fetchSubmission = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('form_responses')
+          .select('*')
+          .eq('id', editId)
+          .single();
+        if (data && !error) {
+          reset(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching submission:', error);
+      }
+    };
+    fetchSubmission();
+  }, [editId, reset]);
 
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -257,11 +278,11 @@ export const PatientResourceData: React.FC = () => {
               <label className="text-sm font-medium text-zinc-700">Address</label>
               <div className="grid grid-cols-1 gap-2">
                 <input {...register('patient.street')} placeholder="Street" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input {...register('patient.apt')} placeholder="Apt/Suite" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                   <input {...register('patient.city')} placeholder="City" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input {...register('patient.state')} placeholder="State" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                   <input {...register('patient.zip')} placeholder="Zip" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                 </div>
@@ -279,7 +300,7 @@ export const PatientResourceData: React.FC = () => {
                 <span className="text-sm">Female</span>
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium text-zinc-700">M.R.#</label>
                 <input {...register('patient.mrNumber')} className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
@@ -302,7 +323,7 @@ export const PatientResourceData: React.FC = () => {
         </section>
 
         {/* Demographics */}
-        <section className="space-y-6 bg-zinc-50 p-6 rounded-3xl border border-zinc-100">
+        <section className="space-y-6 bg-zinc-50 p-3 sm:p-6 rounded-3xl border border-zinc-100">
           <div className="flex items-center gap-2 text-partners-blue-dark font-bold border-b pb-2">
             <Users size={20} />
             <h3 className="uppercase tracking-widest text-sm">Demographic Information</h3>
@@ -336,7 +357,7 @@ export const PatientResourceData: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-700">Race/Ethnicity</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {['White', 'Black', 'Indian', 'Asian', 'Hispanic', 'Russian', 'Other'].map(race => (
                     <label key={race} className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" value={race} {...register('demographics.raceEthnicity')} className="w-4 h-4 rounded border-zinc-300" />
@@ -371,11 +392,11 @@ export const PatientResourceData: React.FC = () => {
               <label className="text-sm font-medium text-zinc-700">Address</label>
               <div className="grid grid-cols-1 gap-2">
                 <input {...register('emergencyContact.street')} placeholder="Street" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input {...register('emergencyContact.apt')} placeholder="Apt/Suite" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                   <input {...register('emergencyContact.city')} placeholder="City" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input {...register('emergencyContact.state')} placeholder="State" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                   <input {...register('emergencyContact.zip')} placeholder="Zip" className="w-full px-4 py-2 rounded-xl border border-zinc-200" />
                 </div>
